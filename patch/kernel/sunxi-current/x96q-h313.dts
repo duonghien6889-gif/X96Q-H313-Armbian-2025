@@ -1,0 +1,39 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "allwinner,sun50i-h313", "allwinner,sun50i";
+    model = "X96Q H313 (minimal)";
+};
+
+&emac {
+    status = "okay";
+    phy-handle = <&ext_rgmii_phy>;
+    phy-mode = "rmii";
+};
+
+ext_rgmii_phy: ethernet-phy@0 {
+    reg = <0>;
+    compatible = "ethernet-phy-ieee802.3-c22";
+};
+
+&mmc1 {
+    status = "okay";
+    bus-width = <4>;
+    vmmc-supply = <&reg_vcc3v3>;
+    vqmmc-supply = <&reg_vcc3v3>;
+};
+
+&sdio1 {
+    status = "okay";
+    wifi: wifi@1 {
+        compatible = "xradio,xr819";
+        reg = <1>;
+        status = "okay";
+    };
+};
+
+memory@0 {
+    device_type = "memory";
+    reg = <0x0 0x80000000>; /* 2GB */
+};
