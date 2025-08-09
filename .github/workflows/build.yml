@@ -1,0 +1,50 @@
+name: Build Armbian X96Q H313 (Bullseye Minimal)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 480
+
+    steps:
+    - name: Checkout helper repo
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git wget curl build-essential ccache bc bison flex \
+          python3 python3-pip python-is-python3 libncurses5-dev libssl-dev device-tree-compiler \
+          libtool unzip
+
+    - name: Clone official Armbian build
+      run: |
+        git clone --depth=1 https://github.com/armbian/build build
+
+    - name: Copy helper files into build tree
+      run: |
+        mkdir -p build/config/boards
+        mkdir -p build/patches/dts
+        mkdir -p build/userpatches
+        cp -r config/boards/* build/config/boards/ || true
+        cp -r patch/kernel/sunxi-current/* build/patches/dts/ || true
+        cp -r userpatches/* build/userpatches/ || true
+        chmod +x build/userpatches/customize-image.sh || true
+
+    - name: Show board files (debug)
+      run: ls -R build/config || true
+
+    - name: Start Armbian build (minimal, Bullseye, non-interactive)
+      working-directory: build
+      run: |
+        export DEBIAN_FRONTEND=noninteractive
+        ./compile.sh BOARD=x96q-h313 BRANCH=current RELEASE=bullseye \
+        BUILD_DESKTOP=no BUILD_MINIMAL=yes KERNEL_ONLY=no KERNEL_CONFIGURE=no
+
+    - name: Upload images artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: armbian-images
+        path: build/output/images
